@@ -346,9 +346,19 @@ function toNotion(st,mealsVal){
 function fromNotion(f){
   if(!f)return null;
   const sess={};
-  // on reconstruit on/off ; les minutes individuelles ne sont pas stockées séparément,
-  // on remet la séance "on" sans minute précise (l'utilisateur peut re-saisir)
-  SESSIONS.forEach(se=>{ if(f[se.col]) sess[se.k]={on:true,min:''}; });
+  // on reconstruit on/off, et on relit les minutes depuis "Sport détail"
+  // (format ex : "Vélo taff 30min, Neoness 45min")
+  const detailStr=f.sportDetail||'';
+  SESSIONS.forEach(se=>{
+    if(f[se.col]){
+      let min='';
+      // cherche "<nom de la séance> <nombre>" dans le détail
+      const re=new RegExp(se.n.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\s*(\\d+)');
+      const m=detailStr.match(re);
+      if(m) min=m[1];
+      sess[se.k]={on:true,min:min};
+    }
+  });
   return {
     coffeeNoSugar: f.coffeeNoSug?1:0,
     noPain:        f.noPain?1:0,
