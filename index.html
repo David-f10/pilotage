@@ -120,14 +120,27 @@
   .tab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7}
   .tab.on{color:var(--amber)}
   .pill{display:inline-block;background:var(--bg2);border:1px solid var(--line);border-radius:20px;padding:5px 12px;font-size:12.5px;color:var(--mut);margin-left:8px}
+  .datenav{display:flex;align-items:center;gap:12px}
+  .datenav>div{flex:1}
+  .datenav button{width:42px;height:42px;flex-shrink:0;border-radius:12px;border:1px solid var(--line);background:var(--bg2);color:var(--amber);font-size:24px;line-height:1;cursor:pointer;font-family:inherit}
+  .datenav button:active{transform:scale(.95)}
+  .datenav button:disabled{opacity:.3;cursor:not-allowed}
+  .todaybtn{margin-top:10px;background:none;border:1px solid var(--line);color:var(--amber);border-radius:10px;padding:8px 14px;font-family:inherit;font-size:13px;cursor:pointer}
 </style>
 </head>
 <body>
 
 <header>
-  <div class="date" id="today"></div>
-  <h1 id="greet">Pilotage</h1>
+  <div class="datenav">
+    <button id="dayprev" aria-label="Jour précédent">‹</button>
+    <div>
+      <div class="date" id="today"></div>
+      <h1 id="greet">Pilotage</h1>
+    </div>
+    <button id="daynext" aria-label="Jour suivant">›</button>
+  </div>
   <div class="sub" id="streakline"></div>
+  <button class="todaybtn" id="todaybtn" style="display:none">↩ Revenir à aujourd'hui</button>
 </header>
 
 <!-- ===== JOUR ===== -->
@@ -297,18 +310,33 @@ const SESSIONS=[
 
 const today=new Date();
 const todayKey=ymd(today);
+let viewDate=new Date(today);   // jour actuellement affiché (peut reculer)
+function viewKey(){return ymd(viewDate)}
+function isToday(){return viewKey()===todayKey}
 function ymd(d){return d.toISOString().slice(0,10)}
 function frDate(d){return d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})}
+function emptyState(){return {coffeeNoSugar:null,noPain:null,lunchSrc:null,dessert:null,
+  sessions:{},water:0,fastOk:null,sleepBed:null,sleepWake:null,bedHour:'',
+  energy:0,weight:'',note:'',mood:''};}
 
 // état : sessions={k:{on:bool,min:number}}
-let state={coffeeNoSugar:null,noPain:null,lunchSrc:null,dessert:null,
-  sessions:{},water:0,fastOk:null,sleepBed:null,sleepWake:null,bedHour:'',
-  energy:0,weight:'',note:'',mood:''};
+let state=emptyState();
 let meals=0;
 
-document.getElementById('today').textContent=frDate(today);
-const h=today.getHours();
-document.getElementById('greet').textContent=h<12?'Bonjour David':h<18?'Cet après-midi':'Ce soir';
+function refreshHeader(){
+  document.getElementById('today').textContent=frDate(viewDate);
+  const h=today.getHours();
+  let titre;
+  if(isToday()) titre=(h<12?'Bonjour David':h<18?'Cet après-midi':'Ce soir');
+  else{
+    const diff=Math.round((today-viewDate)/86400000);
+    titre=diff===1?'Hier':diff>1?`Il y a ${diff} jours`:'Ce jour-là';
+  }
+  document.getElementById('greet').textContent=titre;
+  document.getElementById('todaybtn').style.display=isToday()?'none':'block';
+  // pas de futur : on bloque la flèche droite si on est sur aujourd'hui
+  document.getElementById('daynext').disabled=isToday();
+}
 
 // ---------- mapping Notion ----------
 function toNotion(st,mealsVal){
@@ -468,12 +496,20 @@ document.getElementById('note').oninput=e=>state.note=e.target.value;
 document.getElementById('mood').oninput=e=>state.mood=e.target.value;
 document.getElementById('bedHour').oninput=e=>state.bedHour=e.target.value;
 
-async function loadToday(){
+async function loadDay(){
+  refreshHeader();
   meals=store.getMeals();
-  const f=await store.getDay(todayKey);
+  // reset complet de l'état avant de charger le jour visé
+  state=emptyState();
+  [...enEl.children].forEach(c=>c.classList.remove('on'));
+  document.getElementById('weight').value='';
+  document.getElementById('note').value='';
+  document.getElementById('mood').value='';
+  document.getElementById('bedHour').value='';
+  const f=await store.getDay(viewKey());
   if(f){
-    const d=fromNotion(f);state={...state,...d};state.sessions=d.sessions||{};
-    if(d.meals!=null){meals=d.meals;store.setMeals(meals)}
+    const d=fromNotion(f);state={...emptyState(),...d};state.sessions=d.sessions||{};
+    if(isToday()&&d.meals!=null){meals=d.meals;store.setMeals(meals)}
     if(state.energy)[...enEl.children].forEach((c,j)=>c.classList.toggle('on',j<state.energy));
     document.getElementById('weight').value=state.weight||'';
     document.getElementById('note').value=state.note||'';
@@ -502,12 +538,17 @@ async function computeStreaks(){
 document.getElementById('save').onclick=async()=>{
   const btn=document.getElementById('save');const m=document.getElementById('savedmsg');
   btn.textContent='Enregistrement…';
-  const ok=await store.setDay(todayKey,toNotion(state,meals));
+  const ok=await store.setDay(viewKey(),toNotion(state,isToday()?meals:null));
   btn.textContent='Enregistrer / mettre à jour';
   m.textContent=ok?'Journée enregistrée ✓':'Sauvé en local (Notion hors ligne)';
   m.classList.add('show');setTimeout(()=>m.classList.remove('show'),2500);
   computeStreaks();
 };
+
+// navigation entre les jours
+document.getElementById('dayprev').onclick=()=>{viewDate.setDate(viewDate.getDate()-1);loadDay();window.scrollTo(0,0);};
+document.getElementById('daynext').onclick=()=>{if(isToday())return;viewDate.setDate(viewDate.getDate()+1);loadDay();window.scrollTo(0,0);};
+document.getElementById('todaybtn').onclick=()=>{viewDate=new Date(today);loadDay();window.scrollTo(0,0);};
 
 // ===== RECAP =====
 async function buildRecap(){
@@ -585,7 +626,7 @@ document.querySelectorAll('.tab').forEach(t=>{
     if(t.dataset.v==='recap')buildRecap();window.scrollTo(0,0);};
 });
 
-loadToday();
+loadDay();
 
 // ===== PWA : enregistrement du service worker =====
 if ('serviceWorker' in navigator) {
