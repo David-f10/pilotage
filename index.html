@@ -154,26 +154,24 @@
       <div class="h-sub">Libre — note juste d'où il vient</div>
       <label class="fld" style="margin-top:0">Provenance</label>
       <div class="seg" id="lunchSrc"></div>
-      <label class="fld">Dessert sucré ce midi ?</label>
+      <label class="fld">Dessert sucré aujourd'hui ?</label>
       <div class="seg rd" id="dessert"></div>
     </div>
 
     <div class="card">
       <h2>Sport du jour <span class="pill" id="sportcount">0 min</span></h2>
-      <div class="h-sub">Coche, puis entre les minutes. Plusieurs possibles.</div>
+      <div class="h-sub">Coche, puis entre les minutes. Plusieurs possibles. (Le retour en vélo = coche Vélo taff.)</div>
       <div id="sessions"></div>
     </div>
 
     <div class="card">
-      <h2>Retour du soir</h2>
-      <div class="h-sub">Comment tu es rentré</div>
-      <div class="seg" id="retour"></div>
-    </div>
-
-    <div class="card">
       <h2>💧 Eau <span class="pill" id="waterPill">0 / 10</span></h2>
-      <div class="h-sub">Objectif 10 verres (~2,5 L) — tape un verre</div>
-      <div class="water" id="water"></div>
+      <div class="h-sub">Objectif 10 verres (~2,5 L)</div>
+      <div class="step">
+        <div class="lab">Verres bus<small>~0,25 L le verre</small></div>
+        <div class="stepper"><button id="waterminus">−</button><span class="num" id="waternum">0</span><button id="waterplus">+</button></div>
+      </div>
+      <div class="bar-track"><div class="bar-fill" id="waterbar" style="width:0%"></div></div>
       <div class="water-info" id="waterInfo"></div>
     </div>
 
@@ -288,15 +286,14 @@ const SELrev={'Oui':1,'À peu près':0.5,'Non':0};
 
 // séances : clé -> {nom, icône, colonne Notion checkbox}
 const SESSIONS=[
-  {k:'velo',     n:'Vélo maison',     d:'HIIT ou endurance',   i:'🚴', col:'velo'},
-  {k:'velotaff', n:'Vélo taff',       d:'Trajet travail',      i:'🚲', col:'velotaff'},
-  {k:'hiit',     n:'HIIT maison',     d:'Court et intense',    i:'🔥', col:'hiit'},
-  {k:'bettermen',n:'Renfo / BetterMen',d:'Muscu au poids du corps',i:'🏋️',col:'bettermen'},
-  {k:'neoness',  n:'Neoness',         d:'Vélo + rameur',       i:'💪', col:'neoness'},
-  {k:'marche',   n:'Marche / retour', d:'Min 1h',              i:'🚶', col:'marche'},
-  {k:'course',   n:'Course à pied',   d:'Bientôt — vers -8 kg',i:'🏃', col:'course', soon:true},
+  {k:'velo',     n:'Vélo maison',     d:'Home-trainer',          i:'🚴', col:'velo'},
+  {k:'velotaff', n:'Vélo taff',       d:'Trajet travail',        i:'🚲', col:'velotaff'},
+  {k:'velosortie',n:'Vélo sortie',    d:'Balade / sortie longue',i:'🚵', col:'velosortie'},
+  {k:'bettermen',n:'BetterMen / renfo',d:'Renfo + HIIT (appli)', i:'🏋️',col:'bettermen'},
+  {k:'neoness',  n:'Neoness',         d:'Salle — vélo + rameur', i:'💪', col:'neoness'},
+  {k:'marche',   n:'Marche / retour', d:'Retour à pied, min 1h', i:'🚶', col:'marche'},
+  {k:'course',   n:'Course à pied',   d:'Bientôt — vers -8 kg',  i:'🏃', col:'course', soon:true},
 ];
-const RETOUR=['Marche 1h','Marche 2h','Vélo','Métro','RDV','Aucun'];
 
 const today=new Date();
 const todayKey=ymd(today);
@@ -305,7 +302,7 @@ function frDate(d){return d.toLocaleDateString('fr-FR',{weekday:'long',day:'nume
 
 // état : sessions={k:{on:bool,min:number}}
 let state={coffeeNoSugar:null,noPain:null,lunchSrc:null,dessert:null,
-  sessions:{},retour:null,water:0,fastOk:null,sleepBed:null,sleepWake:null,bedHour:'',
+  sessions:{},water:0,fastOk:null,sleepBed:null,sleepWake:null,bedHour:'',
   energy:0,weight:'',note:'',mood:''};
 let meals=0;
 
@@ -322,17 +319,17 @@ function toNotion(st,mealsVal){
     coffeeNoSug: st.coffeeNoSugar===1,
     noPain:      st.noPain===1,
     lunchSrc:    st.lunchSrc||null,
-    dessert:     st.dessert===1,
+    dessert:     (st.dessert&&st.dessert!=='Non')?true:false,
+    dessertQuand:st.dessert||null,
     velo:        !!(s.velo&&s.velo.on),
     velotaff:    !!(s.velotaff&&s.velotaff.on),
-    hiit:        !!(s.hiit&&s.hiit.on),
+    velosortie:  !!(s.velosortie&&s.velosortie.on),
     bettermen:   !!(s.bettermen&&s.bettermen.on),
     neoness:     !!(s.neoness&&s.neoness.on),
     marche:      !!(s.marche&&s.marche.on),
     course:      !!(s.course&&s.course.on),
     minutes:     totalMin||null,
     sportDetail: detail.join(', ')||null,
-    retour:      st.retour||null,
     water:       st.water||null,
     fast:        st.fastOk!=null?SEL[st.fastOk]:null,
     bed:         st.sleepBed!=null?SEL[st.sleepBed]:null,
@@ -356,9 +353,8 @@ function fromNotion(f){
     coffeeNoSugar: f.coffeeNoSug?1:0,
     noPain:        f.noPain?1:0,
     lunchSrc:      f.lunchSrc||null,
-    dessert:       f.dessert?1:0,
+    dessert:       f.dessertQuand||(f.dessert?'Midi':'Non'),
     sessions:      sess,
-    retour:        f.retour||null,
     water:         f.water||0,
     fastOk:        f.fast!=null?SELrev[f.fast]:null,
     sleepBed:      f.bed!=null?SELrev[f.bed]:null,
@@ -394,10 +390,7 @@ function buildMorning(){
 }
 function buildLunch(){
   seg(document.getElementById('lunchSrc'),['Batch','Picard','Boulangerie','Resto','Autre'].map(l=>({t:l,v:l})),()=>state.lunchSrc,v=>state.lunchSrc=v);
-  seg(document.getElementById('dessert'),[{t:'Pas de dessert',v:0},{t:'Oui dessert',v:1}],()=>state.dessert,v=>state.dessert=v);
-}
-function buildRetour(){
-  seg(document.getElementById('retour'),RETOUR.map(r=>({t:r,v:r})),()=>state.retour,v=>state.retour=v);
+  seg(document.getElementById('dessert'),[{t:'Non',v:'Non'},{t:'Midi',v:'Midi'},{t:'Soir',v:'Soir'},{t:'Les deux',v:'Les deux'}],()=>state.dessert,v=>state.dessert=v);
 }
 function buildFast(){ seg(document.getElementById('fast'),Y3,()=>state.fastOk,v=>state.fastOk=v); }
 function buildSleep(){
@@ -434,17 +427,14 @@ function updateSportCount(){
   document.getElementById('sportcount').textContent=tot+' min';
 }
 function buildWater(){
-  const w=document.getElementById('water');w.innerHTML='';
-  for(let i=1;i<=WATER_GOAL;i++){
-    const g=document.createElement('div');g.className='glass'+(i<=state.water?' full':'');
-    g.onclick=()=>{ state.water=(state.water===i)?i-1:i; buildWater(); };
-    w.appendChild(g);
-  }
-  document.getElementById('waterPill').textContent=state.water+' / '+WATER_GOAL;
-  const reste=Math.max(0,WATER_GOAL-state.water);
+  const goal=WATER_GOAL,n=state.water;
+  document.getElementById('waternum').textContent=n;
+  document.getElementById('waterPill').textContent=n+' / '+goal;
+  document.getElementById('waterbar').style.width=Math.min(100,n/goal*100)+'%';
+  const reste=Math.max(0,goal-n);
   document.getElementById('waterInfo').textContent=reste>0?`Encore ${reste} verre${reste>1?'s':''} (~${(reste*0.25).toFixed(2)} L)`:'Objectif atteint 💧';
 }
-function buildAll(){buildMorning();buildLunch();buildRetour();buildFast();buildSleep();buildSessions();buildWater();}
+function buildAll(){buildMorning();buildLunch();buildFast();buildSleep();buildSessions();buildWater();}
 
 const enEl=document.getElementById('energy');
 ['Vide','Bas','Moyen','Bon','À fond'].forEach((e,i)=>{
@@ -460,6 +450,8 @@ function renderMeals(){
 }
 document.getElementById('mealplus').onclick=()=>{meals++;renderMeals();store.setMeals(meals)};
 document.getElementById('mealminus').onclick=()=>{if(meals>0)meals--;renderMeals();store.setMeals(meals)};
+document.getElementById('waterplus').onclick=()=>{if(state.water<20){state.water++;buildWater()}};
+document.getElementById('waterminus').onclick=()=>{if(state.water>0){state.water--;buildWater()}};
 
 document.getElementById('weight').oninput=e=>state.weight=e.target.value;
 document.getElementById('note').oninput=e=>state.note=e.target.value;
@@ -485,8 +477,10 @@ async function computeStreaks(){
   for(let i=0;i<90;i++){
     const d=new Date(today);d.setDate(d.getDate()-i);
     const data=fromNotion(await store.getDay(ymd(d)));
-    if(i===0){ if(data&&data.dessert===0)sugar++; else if(data&&data.dessert===1)break; else continue; }
-    else { if(data&&data.dessert===0)sugar++; else break; }
+    const noDess=data&&(data.dessert==='Non'||!data.dessert);
+    const hadDess=data&&data.dessert&&data.dessert!=='Non';
+    if(i===0){ if(data&&noDess)sugar++; else if(hadDess)break; else continue; }
+    else { if(data&&noDess)sugar++; else break; }
   }
   document.getElementById('sugarStreak').textContent=sugar;
   document.getElementById('fireEmoji').textContent=sugar>=7?'🔥🔥':sugar>=3?'🔥':'🌱';
@@ -515,7 +509,7 @@ async function buildRecap(){
   let totMin=0,noDessert=0,coffee=0,noPain=0,waterSum=0,waterDays=0;
   filled.forEach(x=>{
     totMin+=(x.data.minutes||0);
-    if(x.data.dessert===0)noDessert++;
+    if(x.data.dessert==='Non'||!x.data.dessert)noDessert++;
     if(x.data.coffeeNoSugar===1)coffee++;
     if(x.data.noPain===1)noPain++;
     if(x.data.water){waterSum+=x.data.water;waterDays++;}
@@ -527,7 +521,7 @@ async function buildRecap(){
   const bars=document.getElementById('bars');bars.innerHTML='';
   const counts={};SESSIONS.forEach(se=>counts[se.k]=0);
   filled.forEach(x=>{SESSIONS.forEach(se=>{if(x.data.sessions&&x.data.sessions[se.k]&&x.data.sessions[se.k].on)counts[se.k]++;})});
-  const targets={velo:5,velotaff:5,hiit:2,bettermen:3,neoness:2,marche:2,course:0};
+  const targets={velo:3,velotaff:5,velosortie:1,bettermen:3,neoness:2,marche:2,course:0};
   SESSIONS.forEach(se=>{
     if(se.soon)return;
     const c=counts[se.k],t=targets[se.k]||1;
