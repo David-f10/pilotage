@@ -67,7 +67,7 @@
   textarea,input[type=text],input[type=number],input[type=time]{width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:12px;color:var(--txt);font-family:inherit;font-size:15px;padding:12px;resize:none}
   textarea:focus,input:focus{outline:none;border-color:var(--amber)}
   .seg{display:flex;gap:7px;margin-top:6px;flex-wrap:wrap}
-  .seg .o{flex:1;min-width:60px;border:1px solid var(--line);background:var(--bg2);border-radius:10px;padding:11px 4px;text-align:center;font-size:13px;color:var(--mut);cursor:pointer;transition:.15s}
+  .seg .o{flex:1;min-width:72px;border:1px solid var(--line);background:var(--bg2);border-radius:10px;padding:11px 8px;text-align:center;font-size:12.5px;color:var(--mut);cursor:pointer;transition:.15s;white-space:nowrap}
   .seg .o.on{background:var(--amber);color:#16130f;border-color:transparent;font-weight:600}
   .seg.gr .o.on{background:var(--green)}
   .seg.rd .o.on{background:var(--red);color:#fff}
@@ -163,10 +163,12 @@
     </div>
 
     <div class="card">
-      <h2>Déjeuner</h2>
-      <div class="h-sub">Libre — note juste d'où il vient</div>
-      <label class="fld" style="margin-top:0">Provenance</label>
+      <h2>Repas</h2>
+      <div class="h-sub">Libre — note juste d'où ça vient</div>
+      <label class="fld" style="margin-top:0">Déjeuner — provenance</label>
       <div class="seg" id="lunchSrc"></div>
+      <label class="fld">Dîner — provenance</label>
+      <div class="seg" id="dinnerSrc"></div>
       <label class="fld">Dessert sucré aujourd'hui ?</label>
       <div class="seg rd" id="dessert"></div>
     </div>
@@ -315,7 +317,7 @@ function viewKey(){return ymd(viewDate)}
 function isToday(){return viewKey()===todayKey}
 function ymd(d){return d.toISOString().slice(0,10)}
 function frDate(d){return d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})}
-function emptyState(){return {coffeeNoSugar:null,noPain:null,lunchSrc:null,dessert:null,
+function emptyState(){return {coffeeNoSugar:null,noPain:null,lunchSrc:null,dinnerSrc:null,dessert:null,
   sessions:{},water:0,fastOk:null,sleepBed:null,sleepWake:null,bedHour:'',
   energy:0,weight:'',note:'',mood:''};}
 
@@ -347,6 +349,7 @@ function toNotion(st,mealsVal){
     coffeeNoSug: st.coffeeNoSugar===1,
     noPain:      st.noPain===1,
     lunchSrc:    st.lunchSrc||null,
+    dinnerSrc:   st.dinnerSrc||null,
     dessert:     (st.dessert&&st.dessert!=='Non')?true:false,
     dessertQuand:st.dessert||null,
     velo:        !!(s.velo&&s.velo.on),
@@ -391,6 +394,7 @@ function fromNotion(f){
     coffeeNoSugar: f.coffeeNoSug?1:0,
     noPain:        f.noPain?1:0,
     lunchSrc:      f.lunchSrc||null,
+    dinnerSrc:     f.dinnerSrc||null,
     dessert:       f.dessertQuand||(f.dessert?'Midi':'Non'),
     sessions:      sess,
     water:         f.water||0,
@@ -427,7 +431,9 @@ function buildMorning(){
   seg(bs,YN,()=>state.noPain,v=>state.noPain=v);
 }
 function buildLunch(){
-  seg(document.getElementById('lunchSrc'),['Batch','Picard','Boulangerie','Resto','Autre'].map(l=>({t:l,v:l})),()=>state.lunchSrc,v=>state.lunchSrc=v);
+  const sources=['Batch','Picard','Boulangerie','Resto','Salade','Autre'].map(l=>({t:l,v:l}));
+  seg(document.getElementById('lunchSrc'),sources,()=>state.lunchSrc,v=>state.lunchSrc=v);
+  seg(document.getElementById('dinnerSrc'),sources,()=>state.dinnerSrc,v=>state.dinnerSrc=v);
   seg(document.getElementById('dessert'),[{t:'Non',v:'Non'},{t:'Midi',v:'Midi'},{t:'Soir',v:'Soir'},{t:'Les deux',v:'Les deux'}],()=>state.dessert,v=>state.dessert=v);
 }
 function buildFast(){ seg(document.getElementById('fast'),Y3,()=>state.fastOk,v=>state.fastOk=v); }
