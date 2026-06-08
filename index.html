@@ -33,14 +33,19 @@
   .card h2{font-family:'Fraunces',serif;font-size:18px;font-weight:600;margin:0 0 2px}
   .card .h-sub{color:var(--dim);font-size:12.5px;margin-bottom:14px}
 
-  .chk{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);cursor:pointer}
+  .chk{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
   .chk:last-child{border:none}
-  .box{width:26px;height:26px;border-radius:9px;border:2px solid var(--line);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:.15s;font-size:15px}
+  .box{width:26px;height:26px;border-radius:9px;border:2px solid var(--line);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:.15s;font-size:15px;cursor:pointer}
   .chk.on .box{background:var(--green);border-color:var(--green);color:#16130f}
   .chk .ico{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;background:var(--bg2)}
-  .chk .lbl{flex:1;font-size:14.5px}
+  .chk .lbl{flex:1;font-size:14.5px;cursor:pointer}
   .chk .lbl small{display:block;color:var(--dim);font-size:11.5px}
   .chk.on .lbl{color:var(--txt)}
+  .chk .mins{width:62px;flex-shrink:0;display:none}
+  .chk.on .mins{display:block}
+  .chk .mins input{width:100%;padding:8px 6px;text-align:center;font-size:14px}
+  .chk.soon{opacity:.45}
+  .chk.soon .box{cursor:not-allowed}
 
   .step{display:flex;align-items:center;justify-content:space-between;margin-top:4px}
   .step .lab{font-size:14.5px}
@@ -48,10 +53,11 @@
   .stepper{display:flex;align-items:center;gap:14px}
   .stepper button{width:38px;height:38px;border-radius:11px;border:1px solid var(--line);background:var(--bg2);color:var(--txt);font-size:22px;cursor:pointer;font-family:inherit}
   .stepper .num{font-family:'Fraunces',serif;font-size:26px;font-weight:600;min-width:34px;text-align:center}
+  .alert{margin-top:12px;background:rgba(217,108,95,.15);border:1px solid var(--red);border-radius:11px;padding:10px 12px;font-size:13px;color:#f2c0b8}
 
   label.fld{display:block;color:var(--mut);font-size:12.5px;margin:14px 0 6px;letter-spacing:.02em}
   label.fld:first-child{margin-top:0}
-  textarea,input[type=text],input[type=number]{width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:12px;color:var(--txt);font-family:inherit;font-size:15px;padding:12px;resize:none}
+  textarea,input[type=text],input[type=number],input[type=time]{width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:12px;color:var(--txt);font-family:inherit;font-size:15px;padding:12px;resize:none}
   textarea:focus,input:focus{outline:none;border-color:var(--amber)}
   .seg{display:flex;gap:7px;margin-top:6px;flex-wrap:wrap}
   .seg .o{flex:1;min-width:60px;border:1px solid var(--line);background:var(--bg2);border-radius:10px;padding:11px 4px;text-align:center;font-size:13px;color:var(--mut);cursor:pointer;transition:.15s}
@@ -63,6 +69,12 @@
   .ebar.on{background:linear-gradient(180deg,var(--amber2),var(--amber));color:#16130f;border-color:transparent;font-weight:600}
   .wrow{display:flex;gap:10px;align-items:flex-end}
   .wrow .u{color:var(--dim);font-size:14px;padding-bottom:13px}
+
+  .water{display:flex;gap:7px;flex-wrap:wrap;margin-top:4px}
+  .glass{width:34px;height:42px;border:2px solid var(--line);border-radius:4px 4px 8px 8px;cursor:pointer;position:relative;overflow:hidden;background:var(--bg2);transition:.15s}
+  .glass.full{border-color:var(--blue)}
+  .glass.full:after{content:"";position:absolute;left:0;right:0;bottom:0;height:75%;background:linear-gradient(180deg,#7fc6dd,var(--blue))}
+  .water-info{font-size:12.5px;color:var(--mut);margin-top:10px}
 
   .streak{display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,rgba(232,161,58,.14),rgba(127,176,105,.1));border:1px solid var(--line);border-radius:14px;padding:14px}
   .streak .fire{font-size:30px}
@@ -120,10 +132,7 @@
       <div class="h-sub">Tuer le sucre du matin — café sans sucre, pas de pain au chocolat</div>
       <div class="streak">
         <div class="fire" id="fireEmoji">🔥</div>
-        <div>
-          <div class="n" id="sugarStreak">0</div>
-          <div class="t">jours d'affilée sans dessert sucré</div>
-        </div>
+        <div><div class="n" id="sugarStreak">0</div><div class="t">jours d'affilée sans dessert sucré</div></div>
       </div>
     </div>
 
@@ -143,9 +152,22 @@
     </div>
 
     <div class="card">
-      <h2>Sport du jour <span class="pill" id="sportcount">0/…</span></h2>
-      <div class="h-sub">Coche ce que tu as fait</div>
+      <h2>Sport du jour <span class="pill" id="sportcount">0 min</span></h2>
+      <div class="h-sub">Coche, puis entre les minutes. Plusieurs possibles.</div>
       <div id="sessions"></div>
+    </div>
+
+    <div class="card">
+      <h2>Retour du soir</h2>
+      <div class="h-sub">Comment tu es rentré</div>
+      <div class="seg" id="retour"></div>
+    </div>
+
+    <div class="card">
+      <h2>💧 Eau <span class="pill" id="waterPill">0 / 10</span></h2>
+      <div class="h-sub">Objectif 10 verres (~2,5 L) — tape un verre</div>
+      <div class="water" id="water"></div>
+      <div class="water-info" id="waterInfo"></div>
     </div>
 
     <div class="card">
@@ -159,16 +181,19 @@
       <div class="h-sub">Batch-cooking restant</div>
       <div class="step">
         <div class="lab">Plats en stock<small>−1 quand tu en manges un</small></div>
-        <div class="stepper">
-          <button id="mealminus">−</button><span class="num" id="mealnum">0</span><button id="mealplus">+</button>
-        </div>
+        <div class="stepper"><button id="mealminus">−</button><span class="num" id="mealnum">0</span><button id="mealplus">+</button></div>
       </div>
+      <div class="alert" id="mealAlert" style="display:none">⚠️ Plus que 2 plats — prévois un batch-cooking bientôt.</div>
     </div>
 
     <div class="card">
       <h2>Sommeil</h2>
       <div class="h-sub">Le sport de 8h se gagne la veille</div>
       <div id="sleep"></div>
+      <div id="bedHourWrap" style="display:none">
+        <label class="fld">Heure réelle de coucher</label>
+        <input type="time" id="bedHour">
+      </div>
     </div>
 
     <div class="card">
@@ -187,7 +212,7 @@
       <input type="text" id="mood" placeholder="ex: motivé, dispersé, lessivé">
     </div>
 
-    <button class="btn" id="save">Enregistrer la journée</button>
+    <button class="btn" id="save">Enregistrer / mettre à jour</button>
     <div class="saved" id="savedmsg">Journée enregistrée ✓</div>
   </div>
 </div>
@@ -196,9 +221,9 @@
 <div class="views" id="v-recap">
   <div class="wrap">
     <div class="big">
-      <div class="b"><div class="n" id="bigSess">0</div><div class="l">Séances</div></div>
+      <div class="b"><div class="n" id="bigMin">0</div><div class="l">Min sport</div></div>
       <div class="b"><div class="n" id="bigSugar">0</div><div class="l">Jours sans dessert</div></div>
-      <div class="b"><div class="n" id="bigCoffee">0</div><div class="l">Café sans sucre</div></div>
+      <div class="b"><div class="n" id="bigWater">0</div><div class="l">Eau moy/j</div></div>
     </div>
     <div class="card">
       <h2>Sport de la semaine</h2>
@@ -235,154 +260,184 @@
 </nav>
 
 <script>
-// ====== COUCHE DE STOCKAGE : Notion via Netlify Function, fallback localStorage ======
+// ===== STOCKAGE : Notion via Netlify Function, fallback localStorage =====
 const API='/.netlify/functions/suivi';
 const store={
   async getDay(key){
-    try{
-      const r=await fetch(API+'?date='+key);
-      if(r.ok){const j=await r.json();
-        // miroir local pour consultation offline
-        if(j.fields)localStorage.setItem('day:'+key,JSON.stringify(j.fields));
-        return j.fields;
-      }
-    }catch(e){}
-    const l=localStorage.getItem('day:'+key);
-    return l?JSON.parse(l):null;
+    try{const r=await fetch(API+'?date='+key);if(r.ok){const j=await r.json();if(j.fields)localStorage.setItem('day:'+key,JSON.stringify(j.fields));return j.fields;}}catch(e){}
+    const l=localStorage.getItem('day:'+key);return l?JSON.parse(l):null;
   },
   async setDay(key,fields){
-    localStorage.setItem('day:'+key,JSON.stringify(fields)); // toujours local d'abord
-    try{
-      const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({date:key,fields})});
-      return r.ok;
-    }catch(e){return false}
+    localStorage.setItem('day:'+key,JSON.stringify(fields));
+    try{const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:key,fields})});return r.ok;}catch(e){return false}
   },
   getMeals(){const v=localStorage.getItem('meals');return v?parseInt(v)||0:0},
   setMeals(n){localStorage.setItem('meals',String(n))},
 };
 
-// ----- mapping état interne <-> champs Notion -----
+const WATER_GOAL=10;
 const SEL={1:'Oui',0.5:'À peu près',0:'Non'};
 const SELrev={'Oui':1,'À peu près':0.5,'Non':0};
+
+// séances : clé -> {nom, icône, colonne Notion checkbox}
+const SESSIONS=[
+  {k:'velo',     n:'Vélo maison',     d:'HIIT ou endurance',   i:'🚴', col:'velo'},
+  {k:'velotaff', n:'Vélo taff',       d:'Trajet travail',      i:'🚲', col:'velotaff'},
+  {k:'hiit',     n:'HIIT maison',     d:'Court et intense',    i:'🔥', col:'hiit'},
+  {k:'bettermen',n:'Renfo / BetterMen',d:'Muscu au poids du corps',i:'🏋️',col:'bettermen'},
+  {k:'neoness',  n:'Neoness',         d:'Vélo + rameur',       i:'💪', col:'neoness'},
+  {k:'marche',   n:'Marche / retour', d:'Min 1h',              i:'🚶', col:'marche'},
+  {k:'course',   n:'Course à pied',   d:'Bientôt — vers -8 kg',i:'🏃', col:'course', soon:true},
+];
+const RETOUR=['Marche 1h','Marche 2h','Vélo','Métro','RDV','Aucun'];
+
+const today=new Date();
+const todayKey=ymd(today);
+function ymd(d){return d.toISOString().slice(0,10)}
+function frDate(d){return d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})}
+
+// état : sessions={k:{on:bool,min:number}}
+let state={coffeeNoSugar:null,noPain:null,lunchSrc:null,dessert:null,
+  sessions:{},retour:null,water:0,fastOk:null,sleepBed:null,sleepWake:null,bedHour:'',
+  energy:0,weight:'',note:'',mood:''};
+let meals=0;
+
+document.getElementById('today').textContent=frDate(today);
+const h=today.getHours();
+document.getElementById('greet').textContent=h<12?'Bonjour David':h<18?'Cet après-midi':'Ce soir';
+
+// ---------- mapping Notion ----------
 function toNotion(st,mealsVal){
   const s=st.sessions||{};
-  return {
+  let totalMin=0;const detail=[];
+  SESSIONS.forEach(se=>{const v=s[se.k];if(v&&v.on){totalMin+=(parseInt(v.min)||0);detail.push(se.n+' '+(v.min||0)+'min');}});
+  const out={
     coffeeNoSug: st.coffeeNoSugar===1,
     noPain:      st.noPain===1,
     lunchSrc:    st.lunchSrc||null,
-    dessert:     st.dessert===1,         // true = a pris un dessert
-    velo:        !!s.velo,
-    neoness:     !!s.neoness,
-    marche:      !!s.marche,
-    bettermen:   !!s.bettermen,
+    dessert:     st.dessert===1,
+    velo:        !!(s.velo&&s.velo.on),
+    velotaff:    !!(s.velotaff&&s.velotaff.on),
+    hiit:        !!(s.hiit&&s.hiit.on),
+    bettermen:   !!(s.bettermen&&s.bettermen.on),
+    neoness:     !!(s.neoness&&s.neoness.on),
+    marche:      !!(s.marche&&s.marche.on),
+    course:      !!(s.course&&s.course.on),
+    minutes:     totalMin||null,
+    sportDetail: detail.join(', ')||null,
+    retour:      st.retour||null,
+    water:       st.water||null,
     fast:        st.fastOk!=null?SEL[st.fastOk]:null,
     bed:         st.sleepBed!=null?SEL[st.sleepBed]:null,
     wake:        st.sleepWake!=null?SEL[st.sleepWake]:null,
+    bedHour:     st.bedHour||null,
     energy:      st.energy||null,
     weight:      st.weight?Number(st.weight):null,
     meals:       (mealsVal!=null?mealsVal:null),
     mood:        st.mood||null,
     note:        st.note||null,
   };
+  return out;
 }
 function fromNotion(f){
   if(!f)return null;
+  const sess={};
+  // on reconstruit on/off ; les minutes individuelles ne sont pas stockées séparément,
+  // on remet la séance "on" sans minute précise (l'utilisateur peut re-saisir)
+  SESSIONS.forEach(se=>{ if(f[se.col]) sess[se.k]={on:true,min:''}; });
   return {
     coffeeNoSugar: f.coffeeNoSug?1:0,
     noPain:        f.noPain?1:0,
     lunchSrc:      f.lunchSrc||null,
     dessert:       f.dessert?1:0,
-    sessions:{velo:!!f.velo,neoness:!!f.neoness,marche:!!f.marche,bettermen:!!f.bettermen},
+    sessions:      sess,
+    retour:        f.retour||null,
+    water:         f.water||0,
     fastOk:        f.fast!=null?SELrev[f.fast]:null,
     sleepBed:      f.bed!=null?SELrev[f.bed]:null,
     sleepWake:     f.wake!=null?SELrev[f.wake]:null,
+    bedHour:       f.bedHour||'',
     energy:        f.energy||0,
     weight:        f.weight!=null?String(f.weight):'',
     meals:         f.meals,
     mood:          f.mood||'',
     note:          f.note||'',
+    minutes:       f.minutes||0,
+    sportDetail:   f.sportDetail||'',
   };
 }
 
-const today=new Date();
-const todayKey=ymd(today);
-const dow=today.getDay();
-
-const ALL_SESSIONS={
-  velo:{n:'Vélo 30 min',d:'Trajet taff ou maison',i:'🚴'},
-  neoness:{n:'Neoness',d:'Vélo + rameur, intense',i:'💪'},
-  marche:{n:'Retour à pied',d:'Min 1h / 4,5 km',i:'🚶'},
-  bettermen:{n:'BetterMen',d:'Renfo court à la maison',i:'🏋️'},
-};
-function sessionsForDay(d){
-  const list=[];
-  if(d>=1&&d<=5)list.push('velo');
-  if(d===3||d===6)list.push('neoness');
-  if(d===1||d===4)list.push('marche');
-  list.push('bettermen'); // option dispo tous les jours
-  return list;
-}
-const todaySessions=sessionsForDay(dow);
-const LUNCH=['Batch','Picard','Boulangerie','Resto','Autre'];
-
-let state={coffeeNoSugar:null,noPain:null,lunchSrc:null,dessert:null,sessions:{},fastOk:null,sleepBed:null,sleepWake:null,energy:0,weight:'',note:'',mood:''};
-let meals=0;
-
-function ymd(d){return d.toISOString().slice(0,10)}
-function frDate(d){return d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})}
-
-document.getElementById('today').textContent=frDate(today);
-const h=today.getHours();
-document.getElementById('greet').textContent=h<12?'Bonjour David':h<18?'Cet après-midi':'Ce soir';
-
-// ---- segmented helper
-function buildSeg(container,opts,getVal,setVal){
+// ---------- UI builders ----------
+function seg(container,opts,getVal,setVal,refresh){
   container.innerHTML='';
-  opts.forEach(o=>{
-    const el=document.createElement('div');el.className='o'+(getVal()===o.v?' on':'');el.textContent=o.t;
-    el.onclick=()=>{setVal(o.v);buildAll()};container.appendChild(el);
-  });
+  opts.forEach(o=>{const el=document.createElement('div');el.className='o'+(getVal()===o.v?' on':'');el.textContent=o.t;
+    el.onclick=()=>{setVal(getVal()===o.v?null:o.v);(refresh||buildAll)()};container.appendChild(el);});
 }
 const YN=[{t:'Oui',v:1},{t:'Non',v:0}];
+const Y3=[{t:'Oui',v:1},{t:'À peu près',v:0.5},{t:'Non',v:0}];
 
 function buildMorning(){
   const m=document.getElementById('morning');m.innerHTML='';
   const a=document.createElement('div');a.innerHTML='<label class="fld" style="margin-top:0">Café SANS sucre ?</label>';
   const as=document.createElement('div');as.className='seg gr';m.appendChild(a);a.appendChild(as);
-  buildSeg(as,YN,()=>state.coffeeNoSugar,v=>state.coffeeNoSugar=v);
+  seg(as,YN,()=>state.coffeeNoSugar,v=>state.coffeeNoSugar=v);
   const b=document.createElement('div');b.innerHTML='<label class="fld">Pain au chocolat évité ?</label>';
   const bs=document.createElement('div');bs.className='seg gr';m.appendChild(b);b.appendChild(bs);
-  buildSeg(bs,YN,()=>state.noPain,v=>state.noPain=v);
+  seg(bs,YN,()=>state.noPain,v=>state.noPain=v);
 }
 function buildLunch(){
-  buildSeg(document.getElementById('lunchSrc'),LUNCH.map(l=>({t:l,v:l})),()=>state.lunchSrc,v=>state.lunchSrc=v);
-  buildSeg(document.getElementById('dessert'),[{t:'Pas de dessert',v:0},{t:'Oui dessert',v:1}],()=>state.dessert,v=>state.dessert=v);
+  seg(document.getElementById('lunchSrc'),['Batch','Picard','Boulangerie','Resto','Autre'].map(l=>({t:l,v:l})),()=>state.lunchSrc,v=>state.lunchSrc=v);
+  seg(document.getElementById('dessert'),[{t:'Pas de dessert',v:0},{t:'Oui dessert',v:1}],()=>state.dessert,v=>state.dessert=v);
 }
-function buildFast(){
-  buildSeg(document.getElementById('fast'),[{t:'Oui',v:1},{t:'À peu près',v:0.5},{t:'Non',v:0}],()=>state.fastOk,v=>state.fastOk=v);
+function buildRetour(){
+  seg(document.getElementById('retour'),RETOUR.map(r=>({t:r,v:r})),()=>state.retour,v=>state.retour=v);
 }
+function buildFast(){ seg(document.getElementById('fast'),Y3,()=>state.fastOk,v=>state.fastOk=v); }
 function buildSleep(){
   const s=document.getElementById('sleep');s.innerHTML='';
   const a=document.createElement('div');a.innerHTML='<label class="fld" style="margin-top:0">Couché à 23h30 ?</label>';
   const as=document.createElement('div');as.className='seg gr';s.appendChild(a);a.appendChild(as);
-  buildSeg(as,[{t:'Oui',v:1},{t:'À peu près',v:0.5},{t:'Non',v:0}],()=>state.sleepBed,v=>state.sleepBed=v);
+  seg(as,Y3,()=>state.sleepBed,v=>state.sleepBed=v);
   const b=document.createElement('div');b.innerHTML='<label class="fld">Levé à 7h15 ?</label>';
   const bs=document.createElement('div');bs.className='seg gr';s.appendChild(b);b.appendChild(bs);
-  buildSeg(bs,[{t:'Oui',v:1},{t:'À peu près',v:0.5},{t:'Non',v:0}],()=>state.sleepWake,v=>state.sleepWake=v);
+  seg(bs,Y3,()=>state.sleepWake,v=>state.sleepWake=v);
+  // champ heure si pas couché à l'heure
+  document.getElementById('bedHourWrap').style.display=(state.sleepBed===0||state.sleepBed===0.5)?'block':'none';
 }
 function buildSessions(){
-  const sEl=document.getElementById('sessions');sEl.innerHTML='';
-  todaySessions.forEach(k=>{
-    const s=ALL_SESSIONS[k];
-    const row=document.createElement('div');row.className='chk'+(state.sessions[k]?' on':'');
-    row.innerHTML=`<div class="ico">${s.i}</div><div class="lbl">${s.n}<small>${s.d}</small></div><div class="box">${state.sessions[k]?'✓':''}</div>`;
-    row.onclick=()=>{state.sessions[k]=!state.sessions[k];buildAll()};sEl.appendChild(row);
+  const el=document.getElementById('sessions');el.innerHTML='';
+  SESSIONS.forEach(se=>{
+    const v=state.sessions[se.k]||{on:false,min:''};
+    const row=document.createElement('div');row.className='chk'+(v.on?' on':'')+(se.soon?' soon':'');
+    row.innerHTML=`<div class="ico">${se.i}</div><div class="lbl">${se.n}<small>${se.d}</small></div>
+      <div class="mins"><input type="number" inputmode="numeric" placeholder="min" value="${v.min||''}"></div>
+      <div class="box">${v.on?'✓':''}</div>`;
+    const toggle=()=>{ if(se.soon)return; const cur=state.sessions[se.k]||{on:false,min:''}; state.sessions[se.k]={on:!cur.on,min:cur.min}; buildSessions(); updateSportCount(); };
+    row.querySelector('.box').onclick=toggle;
+    row.querySelector('.lbl').onclick=toggle;
+    const inp=row.querySelector('.mins input');
+    inp.onclick=e=>e.stopPropagation();
+    inp.oninput=e=>{const cur=state.sessions[se.k]||{on:true,min:''};cur.min=e.target.value;cur.on=true;state.sessions[se.k]=cur;updateSportCount();};
+    el.appendChild(row);
   });
-  const done=todaySessions.filter(k=>state.sessions[k]).length;
-  document.getElementById('sportcount').textContent=done+'/'+todaySessions.length;
+  updateSportCount();
 }
-function buildAll(){buildMorning();buildLunch();buildFast();buildSleep();buildSessions()}
+function updateSportCount(){
+  let tot=0;SESSIONS.forEach(se=>{const v=state.sessions[se.k];if(v&&v.on)tot+=(parseInt(v.min)||0);});
+  document.getElementById('sportcount').textContent=tot+' min';
+}
+function buildWater(){
+  const w=document.getElementById('water');w.innerHTML='';
+  for(let i=1;i<=WATER_GOAL;i++){
+    const g=document.createElement('div');g.className='glass'+(i<=state.water?' full':'');
+    g.onclick=()=>{ state.water=(state.water===i)?i-1:i; buildWater(); };
+    w.appendChild(g);
+  }
+  document.getElementById('waterPill').textContent=state.water+' / '+WATER_GOAL;
+  const reste=Math.max(0,WATER_GOAL-state.water);
+  document.getElementById('waterInfo').textContent=reste>0?`Encore ${reste} verre${reste>1?'s':''} (~${(reste*0.25).toFixed(2)} L)`:'Objectif atteint 💧';
+}
+function buildAll(){buildMorning();buildLunch();buildRetour();buildFast();buildSleep();buildSessions();buildWater();}
 
 const enEl=document.getElementById('energy');
 ['Vide','Bas','Moyen','Bon','À fond'].forEach((e,i)=>{
@@ -391,13 +446,18 @@ const enEl=document.getElementById('energy');
   enEl.appendChild(b);
 });
 
-function renderMeals(){document.getElementById('mealnum').textContent=meals;document.getElementById('mealpill').textContent=meals+' plat'+(meals>1?'s':'')}
+function renderMeals(){
+  document.getElementById('mealnum').textContent=meals;
+  document.getElementById('mealpill').textContent=meals+' plat'+(meals>1?'s':'');
+  document.getElementById('mealAlert').style.display=(meals<=2)?'block':'none';
+}
 document.getElementById('mealplus').onclick=()=>{meals++;renderMeals();store.setMeals(meals)};
 document.getElementById('mealminus').onclick=()=>{if(meals>0)meals--;renderMeals();store.setMeals(meals)};
 
 document.getElementById('weight').oninput=e=>state.weight=e.target.value;
 document.getElementById('note').oninput=e=>state.note=e.target.value;
 document.getElementById('mood').oninput=e=>state.mood=e.target.value;
+document.getElementById('bedHour').oninput=e=>state.bedHour=e.target.value;
 
 async function loadToday(){
   meals=store.getMeals();
@@ -409,10 +469,10 @@ async function loadToday(){
     document.getElementById('weight').value=state.weight||'';
     document.getElementById('note').value=state.note||'';
     document.getElementById('mood').value=state.mood||'';
+    document.getElementById('bedHour').value=state.bedHour||'';
   }
   buildAll();renderMeals();computeStreaks();
 }
-
 async function computeStreaks(){
   let sugar=0;
   for(let i=0;i<90;i++){
@@ -424,8 +484,7 @@ async function computeStreaks(){
   document.getElementById('sugarStreak').textContent=sugar;
   document.getElementById('fireEmoji').textContent=sugar>=7?'🔥🔥':sugar>=3?'🔥':'🌱';
   let logged=0;
-  for(let i=0;i<60;i++){const d=new Date(today);d.setDate(d.getDate()-i);
-    const data=await store.getDay(ymd(d));if(data)logged++;else if(i>0)break}
+  for(let i=0;i<60;i++){const d=new Date(today);d.setDate(d.getDate()-i);const data=await store.getDay(ymd(d));if(data)logged++;else if(i>0)break}
   document.getElementById('streakline').textContent=`${logged} jour${logged>1?'s':''} de suivi · ${meals} plats en stock`;
 }
 
@@ -433,7 +492,7 @@ document.getElementById('save').onclick=async()=>{
   const btn=document.getElementById('save');const m=document.getElementById('savedmsg');
   btn.textContent='Enregistrement…';
   const ok=await store.setDay(todayKey,toNotion(state,meals));
-  btn.textContent='Enregistrer la journée';
+  btn.textContent='Enregistrer / mettre à jour';
   m.textContent=ok?'Journée enregistrée ✓':'Sauvé en local (Notion hors ligne)';
   m.classList.add('show');setTimeout(()=>m.classList.remove('show'),2500);
   computeStreaks();
@@ -442,32 +501,31 @@ document.getElementById('save').onclick=async()=>{
 // ===== RECAP =====
 async function buildRecap(){
   const days=[];
-  for(let i=6;i>=0;i--){const d=new Date(today);d.setDate(d.getDate()-i);
-    const data=fromNotion(await store.getDay(ymd(d)));
-    days.push({date:d,data});}
+  for(let i=6;i>=0;i--){const d=new Date(today);d.setDate(d.getDate()-i);const data=fromNotion(await store.getDay(ymd(d)));days.push({date:d,data});}
   const filled=days.filter(x=>x.data);
-  document.getElementById('recap-range').textContent=
-    `${days[0].date.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})} – ${days[6].date.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})}`;
+  document.getElementById('recap-range').textContent=`${days[0].date.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})} – ${days[6].date.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})}`;
 
-  let totSess=0,noDessert=0,coffee=0,noPain=0;
+  let totMin=0,noDessert=0,coffee=0,noPain=0,waterSum=0,waterDays=0;
   filled.forEach(x=>{
-    if(x.data.sessions)totSess+=Object.values(x.data.sessions).filter(Boolean).length;
+    totMin+=(x.data.minutes||0);
     if(x.data.dessert===0)noDessert++;
     if(x.data.coffeeNoSugar===1)coffee++;
     if(x.data.noPain===1)noPain++;
+    if(x.data.water){waterSum+=x.data.water;waterDays++;}
   });
-  document.getElementById('bigSess').textContent=totSess;
+  document.getElementById('bigMin').textContent=totMin;
   document.getElementById('bigSugar').textContent=noDessert;
-  document.getElementById('bigCoffee').textContent=coffee;
+  document.getElementById('bigWater').textContent=waterDays?Math.round(waterSum/waterDays):0;
 
   const bars=document.getElementById('bars');bars.innerHTML='';
-  const counts={velo:0,neoness:0,marche:0,bettermen:0};
-  filled.forEach(x=>{if(x.data.sessions)Object.keys(x.data.sessions).forEach(k=>{if(x.data.sessions[k]&&counts[k]!=null)counts[k]++})});
-  const targets={velo:5,neoness:2,marche:2,bettermen:3};
-  Object.keys(ALL_SESSIONS).forEach(k=>{
-    const c=counts[k],t=targets[k];
+  const counts={};SESSIONS.forEach(se=>counts[se.k]=0);
+  filled.forEach(x=>{SESSIONS.forEach(se=>{if(x.data.sessions&&x.data.sessions[se.k]&&x.data.sessions[se.k].on)counts[se.k]++;})});
+  const targets={velo:5,velotaff:5,hiit:2,bettermen:3,neoness:2,marche:2,course:0};
+  SESSIONS.forEach(se=>{
+    if(se.soon)return;
+    const c=counts[se.k],t=targets[se.k]||1;
     const row=document.createElement('div');row.style.marginBottom='12px';
-    row.innerHTML=`<div class="stat" style="border:none;padding:0 0 2px"><span class="k">${ALL_SESSIONS[k].i} ${ALL_SESSIONS[k].n}</span><span class="v">${c}/${t}</span></div>
+    row.innerHTML=`<div class="stat" style="border:none;padding:0 0 2px"><span class="k">${se.i} ${se.n}</span><span class="v">${c}/${t}</span></div>
       <div class="bar-track"><div class="bar-fill" style="width:${Math.min(100,c/t*100)}%"></div></div>`;
     bars.appendChild(row);
   });
@@ -478,30 +536,26 @@ async function buildRecap(){
      <div class="stat"><span class="k">🍰 Jours sans dessert</span><span class="v">${noDessert}/${filled.length||7}</span></div>`;
 
   const wb=document.getElementById('weekbars');wb.innerHTML='';
-  days.forEach(x=>{const e=x.data&&x.data.energy||0;
-    const wd=document.createElement('div');wd.className='wd';
+  days.forEach(x=>{const e=x.data&&x.data.energy||0;const wd=document.createElement('div');wd.className='wd';
     wd.innerHTML=`<div class="bar"><div class="fill" style="height:${e/5*100}%"></div></div><div class="d">${x.date.toLocaleDateString('fr-FR',{weekday:'narrow'})}</div>`;wb.appendChild(wd)});
 
   const weights=filled.filter(x=>x.data.weight).map(x=>parseFloat(x.data.weight));
   const wc=document.getElementById('weightCard');
-  if(weights.length){wc.style.display='block';
-    const last=weights[weights.length-1],first=weights[0],diff=(last-first).toFixed(1),toGoal=(last-80).toFixed(1);
+  if(weights.length){wc.style.display='block';const last=weights[weights.length-1],first=weights[0],diff=(last-first).toFixed(1),toGoal=(last-80).toFixed(1);
     document.getElementById('weightInfo').innerHTML=
       `<div class="stat"><span class="k">Dernier poids</span><span class="v">${last} kg</span></div>
        <div class="stat"><span class="k">Variation 7j</span><span class="v" style="color:${diff<=0?'var(--green)':'var(--red)'}">${diff>0?'+':''}${diff} kg</span></div>
        <div class="stat"><span class="k">Reste vers 80 kg</span><span class="v">${toGoal>0?toGoal+' kg':'atteint 🎉'}</span></div>`;
   }else wc.style.display='none';
 
-  const ins=document.getElementById('insights');ins.innerHTML='';
-  const out=[];
+  const ins=document.getElementById('insights');ins.innerHTML='';const out=[];
   if(filled.length<3)out.push('Pas assez de données — logge au moins 3 jours pour des constats fiables.');
   else{
-    out.push(`<b>${totSess}</b> séance${totSess>1?'s':''} cette semaine. ${totSess>=7?'Solide.':totSess>=4?'Correct, on peut monter.':'À reprendre en main.'}`);
-    if(coffee>=5)out.push(`Café sans sucre <b>${coffee}/${filled.length}</b> — le matin est en train de se régler. C\'est LE levier. 👏`);
-    else if(coffee>0)out.push(`Café sans sucre seulement <b>${coffee}/${filled.length}</b>. C\'est ta cible n°1, accroche-toi sur ce point précis.`);
-    if(noDessert>=5)out.push(`<b>${noDessert}</b> jours sans dessert. La boucle glycémique se casse — c\'est exactement ce qui te ramène vers 80.`);
-    const en=filled.map(x=>x.data.energy).filter(Boolean);
-    if(en.length){const ea=(en.reduce((a,b)=>a+b,0)/en.length).toFixed(1);out.push(`Énergie moyenne : <b>${ea}/5</b>.`)}
+    out.push(`<b>${totMin} min</b> d'activité cette semaine.`);
+    if(coffee>=5)out.push(`Café sans sucre <b>${coffee}/${filled.length}</b> — le matin se règle. C'est LE levier. 👏`);
+    else if(coffee>0)out.push(`Café sans sucre seulement <b>${coffee}/${filled.length}</b>. Ta cible n°1, accroche-toi.`);
+    if(noDessert>=5)out.push(`<b>${noDessert}</b> jours sans dessert — la boucle glycémique se casse.`);
+    if(waterDays){const avg=Math.round(waterSum/waterDays);out.push(`Eau : <b>${avg}/${WATER_GOAL}</b> verres en moyenne.`+(avg<7?' À monter.':' 💧'));}
     out.push(`Suivi tenu : <b>${filled.length}/7</b> jours.`);
   }
   out.forEach(t=>{const d=document.createElement('div');d.className='insight';d.innerHTML=t;ins.appendChild(d)});
@@ -514,12 +568,10 @@ async function buildRecap(){
 }
 
 document.querySelectorAll('.tab').forEach(t=>{
-  t.onclick=()=>{
-    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));t.classList.add('on');
+  t.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));t.classList.add('on');
     document.querySelectorAll('.views').forEach(v=>v.classList.remove('active'));
     document.getElementById('v-'+t.dataset.v).classList.add('active');
-    if(t.dataset.v==='recap')buildRecap();window.scrollTo(0,0);
-  };
+    if(t.dataset.v==='recap')buildRecap();window.scrollTo(0,0);};
 });
 
 loadToday();
