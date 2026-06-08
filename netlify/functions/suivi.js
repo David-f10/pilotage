@@ -1,14 +1,6 @@
 // netlify/functions/suivi.js
-// Proxy entre l'app Pilotage et l'API Notion.
-// Le NOTION_TOKEN reste côté serveur, jamais exposé au navigateur.
-//
-// Variables d'environnement Netlify à définir :
-//   NOTION_TOKEN   -> le token de ton intégration Notion (secret_xxx)
-//   NOTION_DB_ID   -> 72453d5b-4977-487f-9b43-688d7104dfc8  (data source / collection)
-//
-// Endpoints :
-//   GET  /.netlify/functions/suivi?date=YYYY-MM-DD   -> renvoie la ligne du jour (ou null)
-//   POST /.netlify/functions/suivi   body: { date, fields:{...} } -> upsert la ligne du jour
+// Proxy entre l'app Pilotage et l'API Notion. Upsert : 1 ligne par jour, par date.
+// Variables d'env Netlify : NOTION_TOKEN, NOTION_DB_ID (database ID eb0cfde5-...)
 
 const NOTION_VERSION = "2022-06-28";
 
@@ -19,12 +11,20 @@ const PROP = {
   lunchSrc:    { name: "Déjeuner source",     type: "select" },
   dessert:     { name: "Dessert midi",        type: "checkbox" },
   velo:        { name: "Vélo",                type: "checkbox" },
+  velotaff:    { name: "Vélo taff",           type: "checkbox" },
+  hiit:        { name: "HIIT maison",         type: "checkbox" },
+  bettermen:   { name: "BetterMen",           type: "checkbox" },
   neoness:     { name: "Neoness",             type: "checkbox" },
   marche:      { name: "Marche retour",       type: "checkbox" },
-  bettermen:   { name: "BetterMen",           type: "checkbox" },
+  course:      { name: "Course à pied",       type: "checkbox" },
+  minutes:     { name: "Minutes sport",       type: "number" },
+  sportDetail: { name: "Sport détail",        type: "rich_text" },
+  retour:      { name: "Retour type",         type: "select" },
+  water:       { name: "Eau (verres)",        type: "number" },
   fast:        { name: "Jeûne 13-20h",        type: "select" },
   bed:         { name: "Couché 23h30",        type: "select" },
   wake:        { name: "Levé 7h15",           type: "select" },
+  bedHour:     { name: "Heure coucher",       type: "rich_text" },
   energy:      { name: "Énergie",             type: "number" },
   weight:      { name: "Poids",               type: "number" },
   meals:       { name: "Plats restants",      type: "number" },
@@ -65,7 +65,6 @@ async function notion(path, method, body, token) {
   return data;
 }
 
-// retrouve la page (ligne) dont le titre Date == date
 async function findByDate(date, token, dbId) {
   const data = await notion("databases/" + dbId + "/query", "POST", {
     filter: { property: PROP.date.name, title: { equals: date } },
@@ -74,17 +73,13 @@ async function findByDate(date, token, dbId) {
   return data.results && data.results[0] ? data.results[0].id : null;
 }
 
-// transforme une page Notion en objet plat pour l'app
 function pageToFields(page) {
   const p = page.properties || {};
   const get = (n) => p[n] || {};
   const sel = (n) => (get(n).select ? get(n).select.name : null);
   const chk = (n) => !!get(n).checkbox;
   const num = (n) => (typeof get(n).number === "number" ? get(n).number : null);
-  const txt = (n) => {
-    const arr = get(n).rich_text || get(n).title || [];
-    return arr.map((t) => t.plain_text).join("");
-  };
+  const txt = (n) => { const arr = get(n).rich_text || get(n).title || []; return arr.map((t) => t.plain_text).join(""); };
   return {
     date:        txt(PROP.date.name),
     coffeeNoSug: chk(PROP.coffeeNoSug.name),
@@ -92,12 +87,20 @@ function pageToFields(page) {
     lunchSrc:    sel(PROP.lunchSrc.name),
     dessert:     chk(PROP.dessert.name),
     velo:        chk(PROP.velo.name),
+    velotaff:    chk(PROP.velotaff.name),
+    hiit:        chk(PROP.hiit.name),
+    bettermen:   chk(PROP.bettermen.name),
     neoness:     chk(PROP.neoness.name),
     marche:      chk(PROP.marche.name),
-    bettermen:   chk(PROP.bettermen.name),
+    course:      chk(PROP.course.name),
+    minutes:     num(PROP.minutes.name),
+    sportDetail: txt(PROP.sportDetail.name),
+    retour:      sel(PROP.retour.name),
+    water:       num(PROP.water.name),
     fast:        sel(PROP.fast.name),
     bed:         sel(PROP.bed.name),
     wake:        sel(PROP.wake.name),
+    bedHour:     txt(PROP.bedHour.name),
     energy:      num(PROP.energy.name),
     weight:      num(PROP.weight.name),
     meals:       num(PROP.meals.name),
@@ -117,9 +120,7 @@ exports.handler = async (event) => {
 
   const token = process.env.NOTION_TOKEN;
   const dbId  = process.env.NOTION_DB_ID;
-  if (!token || !dbId) {
-    return { statusCode: 500, headers, body: JSON.stringify({ error: "NOTION_TOKEN ou NOTION_DB_ID manquant" }) };
-  }
+  if (!token || !dbId) return { statusCode: 500, headers, body: JSON.stringify({ error: "NOTION_TOKEN ou NOTION_DB_ID manquant" }) };
 
   try {
     if (event.httpMethod === "GET") {
@@ -130,7 +131,6 @@ exports.handler = async (event) => {
       const page = await notion("pages/" + id, "GET", null, token);
       return { statusCode: 200, headers, body: JSON.stringify({ found: true, fields: pageToFields(page) }) };
     }
-
     if (event.httpMethod === "POST") {
       const { date, fields } = JSON.parse(event.body || "{}");
       if (!date) return { statusCode: 400, headers, body: JSON.stringify({ error: "date requise" }) };
@@ -144,7 +144,6 @@ exports.handler = async (event) => {
         return { statusCode: 200, headers, body: JSON.stringify({ ok: true, action: "created" }) };
       }
     }
-
     return { statusCode: 405, headers, body: JSON.stringify({ error: "Méthode non supportée" }) };
   } catch (e) {
     return { statusCode: 500, headers, body: JSON.stringify({ error: String(e.message || e) }) };
