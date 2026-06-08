@@ -492,8 +492,14 @@ function renderMeals(){
   document.getElementById('mealpill').textContent=meals+' plat'+(meals>1?'s':'');
   document.getElementById('mealAlert').style.display=(meals<=2)?'block':'none';
 }
-document.getElementById('mealplus').onclick=()=>{meals++;renderMeals();store.setMeals(meals)};
-document.getElementById('mealminus').onclick=()=>{if(meals>0)meals--;renderMeals();store.setMeals(meals)};
+document.getElementById('mealplus').onclick=()=>{meals++;renderMeals();store.setMeals(meals);persistMeals()};
+document.getElementById('mealminus').onclick=()=>{if(meals>0)meals--;renderMeals();store.setMeals(meals);persistMeals()};
+let mealsTimer=null;
+function persistMeals(){
+  // enregistre le stock courant sur la journée d'aujourd'hui (léger debounce)
+  clearTimeout(mealsTimer);
+  mealsTimer=setTimeout(()=>{ store.setDay(todayKey,{meals:meals}); },600);
+}
 document.getElementById('waterplus').onclick=()=>{if(state.water<20){state.water++;buildWater()}};
 document.getElementById('waterminus').onclick=()=>{if(state.water>0){state.water--;buildWater()}};
 
@@ -504,7 +510,7 @@ document.getElementById('bedHour').oninput=e=>state.bedHour=e.target.value;
 
 async function loadDay(){
   refreshHeader();
-  meals=store.getMeals();
+  meals=store.getMeals();   // stock courant = source de vérité locale, jamais écrasé par Notion
   // reset complet de l'état avant de charger le jour visé
   state=emptyState();
   [...enEl.children].forEach(c=>c.classList.remove('on'));
@@ -515,7 +521,6 @@ async function loadDay(){
   const f=await store.getDay(viewKey());
   if(f){
     const d=fromNotion(f);state={...emptyState(),...d};state.sessions=d.sessions||{};
-    if(isToday()&&d.meals!=null){meals=d.meals;store.setMeals(meals)}
     if(state.energy)[...enEl.children].forEach((c,j)=>c.classList.toggle('on',j<state.energy));
     document.getElementById('weight').value=state.weight||'';
     document.getElementById('note').value=state.note||'';
